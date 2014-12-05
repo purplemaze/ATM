@@ -57,7 +57,7 @@ public class ATMClient {
 	 * Reads connectionPort and address from file
 	 */
 	private void readConnection() throws IOException{	
-		file = new FileReaderWriter("/home/daniel/Documents/workspace/Inet/src/client/res/client.config");
+		file = new FileReaderWriter("client/res/client.config");
 		List<String> connectionInfo = new ArrayList<String>();
 		connectionInfo = file.readFile();
 		connectionPort = Integer.parseInt(connectionInfo.get(0));
@@ -184,18 +184,83 @@ public class ATMClient {
 		response = answear[1];
 		if(response == 0) {
 			int amount = 0;
-			while(!(validateDeposit(amount))) {
+			while(!(validateAmount(amount))) {
 				try {
 					System.out.println(lang.get("depositAmount"));
 					amount = scanner.nextInt();
 				}catch (InputMismatchException e){
 					scanner.next();
 				}	
-				if(!(validateDeposit(amount))) 
+				if(!(validateAmount(amount))) 
 					System.out.println("You can't insert more than 1 000 000:-");
 			}
 			out.writeInt(amount);
 			in.read(answear);
+		}
+		
+	}
+	
+	private void withdrawal() throws IOException {
+		//byte opCode;
+		byte response;
+		byte[] withdrawlReq = {4, 1};
+		byte[] answear = new byte[2];
+		out.write(withdrawlReq); // withdrawl request
+		in.read(answear);
+		response = answear[1];
+		if(response == 0) {
+			int amount = 0;
+			while(!(validateAmount(amount))) {
+				try {
+					System.out.println(lang.get("withdrawAmount"));	
+					amount = scanner.nextInt();
+				}catch (InputMismatchException e){
+					scanner.next();
+				}	
+				if(!(validateAmount(amount))) 
+					System.out.println("You can't withdraw more than 1 000 000:-");
+			}
+			out.writeInt(amount);
+			in.read(answear);
+			response = answear[1];
+			if(response == 0) {
+				String code;
+				while(true) {
+					try {
+						System.out.println(lang.get("code"));	
+						code = scanner.next();
+						int ret = validateWithdrawalCode(code);
+						if(ret == -1) {
+							System.out.println("Invalid code length, the code needs to be exactly 2 digits");
+						}else if(ret == -2) {
+							System.out.println("Invalid code, the code needs to be exactly 2 digits");	
+						} else {
+							break;
+						}
+					}catch (InputMismatchException e){
+						scanner.next();
+						System.out.println("Invalid code");
+					}
+				}
+				out.writeUTF(code);
+				in.read(answear);
+				response = answear[1];
+				if(response == 0) {
+					System.out.println("Withdrawal successfull");
+				}else if (response == -1) {
+					System.out.println(lang.get("wrongCode"));
+				}else if (response == 1) {
+					System.out.println("You have no more codes avaliable.. contact bank for new codes..");
+				}else if (response == -2) {
+					System.out.println("Insufficient founds! You are poor..");
+				}else {
+					System.err.println("Something went wrong... contact bank");
+				}
+			}else {
+				System.err.println("Something went wrong... contact bank");
+			}
+		}else {
+			System.err.println("Not logged in error.. contact bank");
 		}
 		
 	}
@@ -212,7 +277,7 @@ public class ATMClient {
 			if(chosen == 1){
 				balance();
 			}else if(chosen == 2){
-				System.out.println(lang.get("withdrawAmount"));		
+				withdrawal();
 			}else if(chosen == 3){
 				deposit();
 			}else if(chosen == 4){
@@ -226,7 +291,7 @@ public class ATMClient {
 				}
 			}else if(chosen == 5){
 				System.out.println(lang.get("byePhrase"));
-				byte[] logout = {5, 1};
+				byte[] logout = {6, 1};
 				byte[] answear = new byte[2];
 				out.write(logout);
 				in.read(answear);
@@ -234,17 +299,14 @@ public class ATMClient {
 			}
 		}
 		this.login = false;
-		out.close();
-		in.close();
-		ATMSocket.close();
-		startClient();
+		scanLogin();
 
 	}	
 	/*
 	 * Reads from language file
 	 */
 	private void defaultLanguage() throws IOException{
-		file = new FileReaderWriter("/home/daniel/Documents/workspace/Inet/src/client/res/english.lang");
+		file = new FileReaderWriter("client/res/english.lang");
 		List<String> eng = new ArrayList<String>();
 		eng = file.readFile();
 		lang = new HashMap<>();
@@ -263,7 +325,7 @@ public class ATMClient {
 	
 	}
 	private void choseSwedish() throws IOException{
-		file = new FileReaderWriter("/home/daniel/Documents/workspace/Inet/src/client/res/english.lang");
+		file = new FileReaderWriter("client/res/english.lang");
 		List<String> swe = new ArrayList<String>();
 		swe = file.readFile();
 		lang.put("startMenu",swe.get(0));
@@ -301,10 +363,29 @@ public class ATMClient {
 		return true;
 	}
 	
-	private boolean validateDeposit(int amount) {
+	private boolean validateAmount(int amount) {
 		if(amount > 0 && amount < 1000000) return true;
-		
 		return false;
+	}
+	
+	/**
+	 * 
+	 * @param cardCode
+	 * @return
+	 * -1 = Invalid code length
+	 * -2 = Code is not a number
+	 *  0 = Success
+	 */
+	private int validateWithdrawalCode(String cardCode) {
+		char[] tempArray = cardCode.toCharArray();
+		if(tempArray.length != 2) return -1;
+		try {
+			Integer.parseInt("" + tempArray[0]);
+			Integer.parseInt("" + tempArray[1]);
+		}catch(NumberFormatException e){
+			return -2;
+		}
+		return 0;
 	}
 	
 	public static void main(String[] args) throws IOException {

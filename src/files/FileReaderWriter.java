@@ -5,8 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -47,24 +45,5 @@ public class FileReaderWriter {
 		Files.write(path, aLines, charset);
 	}
 		  
-	public static void main(String[] args) throws IOException{
-		
-		String newLine = args[0];
-		FileReaderWriter fRead = new FileReaderWriter("/home/daniel/Documents/workspace/Inet/src/test.txt");
-		
-		ArrayList<String> lines = new ArrayList<String>();
-		lines.add(newLine);
-	    fRead.writeFile(lines);
-   
-				    
-		//treat as a small file
-		lines = (ArrayList<String>) fRead.readFile();
-		Iterator<String> it = lines.iterator();
-		while(it.hasNext()) {
-			System.out.println(it.next());
-		}
-
-	}
-	
 }
 

@@ -48,13 +48,18 @@ public class ATMServerThread extends Thread {
     }
     
     /**
+     * @throws IOException 
      * 
      */
-    private void logOutUser() {
+    private void logOutUser() throws IOException {
     	client.saveUserData();
     	server.logoutClient(client.getUserId());
     }
     
+    /**
+     * 
+     * @throws IOException
+     */
     private void loginUser() throws IOException {
     	byte[] cardNumber = new byte[8];
     	byte[] answear = {1,2};
@@ -97,7 +102,7 @@ public class ATMServerThread extends Thread {
     }
     
     private void greeting() throws IOException {
-    	reader = new FileReaderWriter("/home/daniel/Documents/workspace/Inet/src/server/res/banner.txt");
+    	reader = new FileReaderWriter("server/res/banner.txt");
     	List<String> banner = reader.readFile();
     	Iterator<String> it = banner.iterator();
     	StringBuilder stringB = new StringBuilder();
@@ -134,6 +139,34 @@ public class ATMServerThread extends Thread {
     			out.write(answear);
     		}
     	}
+    	System.out.println(""  + socket + " : " + "deposit complete " + "ret: " + answear[1]);
+    }
+    
+    /**
+     * 
+     * @throws IOException
+     */
+    private void withdrawal() throws IOException {
+    	byte[] answear = {4,0};
+    	if(client != null) {
+    		out.write(answear);
+    		int amount = in.readInt(); // lägg till felhantering!!
+    		out.write(answear); 
+    		String code = in.readUTF();
+    		int ret = client.withdrawal(amount, code);
+    		if(ret == 0) {
+    			out.write(answear);
+    		}else if(ret == -1) {
+    			answear[1] = -1;
+    			out.write(answear);
+    		}else if(ret == -2) {
+    			answear[1] = -2;
+    			out.write(answear);
+    		}else if(ret == 1) {
+    			answear[1] = 1;
+    			out.write(answear);
+    		}
+    	}
     }
 
     public void run(){         
@@ -143,8 +176,7 @@ public class ATMServerThread extends Thread {
             
             greeting();
             
-            byte loop = 0;
-            while(loop != 6) {
+            while(true) {
             	byte opCode = in.readByte();
             	if(opCode == -1) throw new IOException("broken pipe");
             	@SuppressWarnings("unused")
@@ -158,23 +190,35 @@ public class ATMServerThread extends Thread {
             		System.out.println(""  + socket + " : " + "is accessing his/hers balance");
             		balance();
             		break;
+            	case 4:
+            		System.out.println(""  + socket + " : " + "is making a withdrawl");
+            		withdrawal();
+            		break;
             	case 5:
             		System.out.println(""  + socket + " : " + "is depositing money");
             		deposit();
+            		break;
+            	case 6:
+                    logOutUser();
+                    byte[] logout = {6,0};
+                    out.write(logout);
+            		System.out.println(""  + socket + " : " + "logged out");
+            		break;
             	default: 
                     break;
             	}
-            	loop = opCode;
             }
-            logOutUser();
-            byte[] logout = {6,0};
-            out.write(logout);
-            out.close();
-            in.close();
-            System.out.println(""  + socket + " : " + "disconnected");
-            socket.close();
         }catch (IOException e){
-        	logOutUser();
+            try {
+            	if(client != null)
+            		logOutUser();
+				out.close();
+				in.close();
+				socket.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
         	System.out.println(""  + socket + " : " + "disconnected suddenly");
         }
     

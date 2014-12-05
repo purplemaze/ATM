@@ -59,7 +59,7 @@ public class ATMServer {
      * @throws IOException
      */
     private void setupClientDB() throws IOException {	
-    	clientsDB = new FileReaderWriter("/home/daniel/Documents/workspace/Inet/src/server/res/clients.db");
+    	clientsDB = new FileReaderWriter("server/res/clients.db");
     	clients = new HashMap<Long, Integer>(); 
     	clientsLoggedIn = new HashMap<Long, Boolean>(); 
     	

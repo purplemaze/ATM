@@ -17,8 +17,10 @@ public class ATMServerClient {
 	private int cardCode;
 	private int balance;
     private FileReaderWriter clientsDB;
+    private FileReaderWriter clientCodesDB;
     ArrayList<String> clients;
     Iterator<String> it;
+    ArrayList<String> clientCodes;
 	
 	/**
 	 * 
@@ -27,8 +29,12 @@ public class ATMServerClient {
 	 */
 	public ATMServerClient(long userId) throws IOException {
 		this.userId = userId;
+		clientCodesDB = new FileReaderWriter("server/res/clientcodes/" + userId + ".codes");
+		clientsDB = new FileReaderWriter("server/res/clients.db");
+		getClientCodes();
 		getUserData();
 		
+		// Populate all the client fields.
 		it = clients.iterator();
 		while(it.hasNext()) {
 			String temp = it.next();
@@ -46,8 +52,11 @@ public class ATMServerClient {
 	 * 
 	 */
 	private void getUserData() throws IOException {
-		clientsDB = new FileReaderWriter("/home/daniel/Documents/workspace/Inet/src/server/res/clients.db");
 		clients = (ArrayList<String>) clientsDB.readFile();		
+	}
+	
+	private void getClientCodes() throws IOException {
+		clientCodes = (ArrayList<String>) clientCodesDB.readFile();
 	}
 	
 	private String buildUserData() {
@@ -55,8 +64,9 @@ public class ATMServerClient {
 	}
 	/**
 	 * saveUserData
+	 * @throws IOException 
 	 */
-	public void saveUserData() {
+	public void saveUserData() throws IOException {
 		try {
 			getUserData();
 			it = clients.iterator();
@@ -69,11 +79,11 @@ public class ATMServerClient {
 			}
 			clients.add(buildUserData());
 			clientsDB.writeFile(clients);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			clientCodesDB.writeFile(clientCodes);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
 	}
 	
 	/**
@@ -85,16 +95,29 @@ public class ATMServerClient {
 	}
 	
 	/**
-	 * withdrawl
+	 * Withdrawal
 	 * @param amount
 	 * @return
 	 */
-	public boolean withdrawl(int amount) {
-		if(amount <= balance) {
-			balance -= amount;
-			return true;
+	public int withdrawal(int amount, String code) {
+		try {
+			getClientCodes();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return 1;
 		}
-		return false;
+		
+		if(code.equals(clientCodes.get(0))) {
+			if(amount <= balance) {
+				balance -= amount;
+				clientCodes.remove(0);
+				return 0;
+			}else {
+				return -2;
+			}	
+		}else {
+			return -1;
+		}
 	}
 	
 	/**
@@ -109,16 +132,5 @@ public class ATMServerClient {
 	
 	public long getUserId() {
 		return userId;
-	}
-	
-	public static void main(String[] args) throws IOException{
-		
-		ATMServerClient test = new ATMServerClient(5555666677778888L);
-		System.out.println(test.getAccountBalance());
-		
-		test.withdrawl(500);
-		test.saveUserData();
-		System.out.println(test.getAccountBalance());
-
 	}
 }
