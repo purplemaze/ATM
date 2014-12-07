@@ -10,8 +10,15 @@ import java.io.*;
 import files.FileReaderWriter;
 
 /**
- *  @author Daniel C 
- *  @author Ziad S
+ * ATMServer class!
+ * 
+ * This is the main class for the ATM server application.
+ * It creates a new ServerSocket that listens and accept new connections.
+ * The ATMServer creates one thread per each client connection.
+ * 
+ * @author Daniel C 
+ * @author Ziad S
+ * @version 1.0
 */
 public class ATMServer {
 
@@ -23,24 +30,25 @@ public class ATMServer {
     private Map<Long, Boolean> clientsLoggedIn;
 
     /**
-     * Konstruktor för ATMServer
-     * Tar en connectionPort(int) och sätter alla fält samt anropar setupServ.
-     * Kastar en IOException
+     * Constructor.
+     * @param connectionPort The connection port for the server
+     * @throws IOException when creating a new server with setupServ or reading from file in setupClientDB
+	 * @see IOException
      */
     public ATMServer(int connectionPort) throws IOException {
-        ATMServer.connectionPort = connectionPort;  //Static
+        ATMServer.connectionPort = connectionPort;
         listening = true;
         setupClientDB();
         setupServ();
     }
 
     /**
-     * setupServ
-     * Tar en Port och skapar en ny ServerScoket
-     * 
+     * This method creates a new ServerSocket with a static port.
+     * It creates one thread per each client connection.
+     * @throws IOException when creating a new server
+     * @see IOException
      */
     private void setupServ() throws IOException {
-
         try {
             serverSocket = new ServerSocket(connectionPort); 
             System.out.println("ATMServer started listening on port: " + connectionPort);
@@ -48,15 +56,15 @@ public class ATMServer {
                 new ATMServerThread(serverSocket.accept(), this).start();
         } catch (IOException e) {
             System.err.println("Could not listen on port: " + connectionPort);
-            System.exit(1);
+            System.exit(-1);
         }
-
     }
     
     /**
-     * setupClientDB
-     * 
-     * @throws IOException
+     * This method loads the client database.
+     * Then it stores all the clients in memory as not logged in.
+     * @throws IOException when reading a file
+     * @see IOException
      */
     private void setupClientDB() throws IOException {	
     	clientsDB = new FileReaderWriter("server/res/clients.db");
@@ -76,8 +84,10 @@ public class ATMServer {
     }
     
     /**
-     * loginClient
-     * @return :
+     * This method tries to log in the client.
+     * @param clientID
+     * @param cardCode
+     * @return int This returns the following:
      * -1 if no such user
      * 0 if already logged in
      * 1 wrong cardCode
@@ -88,32 +98,34 @@ public class ATMServer {
     	
     	if(cardCode != clients.get(clientID)) return 1;
     	
-    	boolean isLoggedin =  clientsLoggedIn.get(clientID);
-    	if(isLoggedin) return 0;
+    	if(clientsLoggedIn.get(clientID)) return 0;
     	
-    	// log in the user
     	clientsLoggedIn.put(clientID, true);
     	return 2;
     	
     }
     
+    /**
+     * This method will log out the client
+     * @param clientID
+     */
     public void logoutClient(Long clientID) {
     	clientsLoggedIn.put(clientID, false);
-    	
     }
-    
-    
-    public static void main(String[] args) throws IOException {
-    	
+     
+    /**
+     * This is the main method which creates a new ATMServer
+     * @param args 
+     */
+    public static void main(String[] args) {
         try {
             connectionPort = Integer.parseInt(args[0]);
-        } catch (ArrayIndexOutOfBoundsException e) {
+            new ATMServer(connectionPort);
+        } catch (ArrayIndexOutOfBoundsException e1) {
             System.err.println("Missing argument connection port");
             System.exit(1);
+        } catch (IOException e2) {
+        	e2.printStackTrace();
         }
-
-        // Create a new ATMServer
-        new ATMServer(connectionPort);
-
     }
 }

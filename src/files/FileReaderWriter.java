@@ -8,19 +8,21 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
+ * ATMServer class!
  * 
- * @author daniel
- *
+ * This is a wrapper class for writing and reading to/from the same file.
+ * 
+ * @author Daniel C 
+ * @author Ziad S
+ * @version 1.0
  */
 public class FileReaderWriter {
 	private Path path;
 	private Charset charset;
 	
 	/**
-	 * Konstruktor
-	 * @param dir
+	 * Constructor
 	 * @param filename
-	 * @param charset
 	 */
 	public FileReaderWriter(String filename) {
 		this.path = Paths.get(filename);
@@ -28,18 +30,20 @@ public class FileReaderWriter {
 	}
 
 	/**
-	 * readFile - reads a "small" file
-	 * @return
+	 * Reads from a "small" file.
+	 * @return a List<String> where every element is a row in the read file.
 	 * @throws IOException
+	 * @see IOException
 	 */
 	public List<String> readFile() throws IOException {
 	    return Files.readAllLines(path, charset);
 	}
 
 	/**
-	 * writeFile - writes a "small" file
+	 * Writes to a "small" file
 	 * @param aLines
 	 * @throws IOException
+	 * @see IOException
 	 */
 	public void writeFile(List<String> aLines) throws IOException {
 		Files.write(path, aLines, charset);

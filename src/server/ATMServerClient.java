@@ -7,9 +7,14 @@ import java.util.Iterator;
 import files.FileReaderWriter;
 
 /**
+ * ATMServerClient class!
  * 
- * @author Daniel
- *
+ * This class is a representation of the client on the server side.
+ * It holds the state of a client's balance, card code, and client codes(for withdrawal).
+ * 
+ * @author Daniel C 
+ * @author Ziad S
+ * @version 1.0
  */
 public class ATMServerClient {
 	
@@ -23,9 +28,10 @@ public class ATMServerClient {
     ArrayList<String> clientCodes;
 	
 	/**
-	 * 
+	 * Constructor
 	 * @param userId
 	 * @throws IOException
+	 * @see IOException
 	 */
 	public ATMServerClient(long userId) throws IOException {
 		this.userId = userId;
@@ -47,21 +53,33 @@ public class ATMServerClient {
 	}
 	
 	/**
-	 * getUserData
+	 * This method reads from the clients database and stores all the
+	 * information in an ArrayList<String>.
 	 * @throws IOException 
-	 * 
+	 * @see IOException
 	 */
 	private void getUserData() throws IOException {
 		clients = (ArrayList<String>) clientsDB.readFile();		
 	}
 	
+	/**
+	 * This method reads this clients codes(for withdrawal).
+	 * @throws IOException
+	 * @see IOException
+	 */
 	private void getClientCodes() throws IOException {
 		clientCodes = (ArrayList<String>) clientCodesDB.readFile();
 	}
 	
+	/**
+	 * This help method creates a string consisting of this clients userId cardCode 
+	 * and balance, to later be written back to the clients database.
+	 * @return
+	 */
 	private String buildUserData() {
 		return "" + userId + "," + cardCode + "," + balance;
 	}
+	
 	/**
 	 * saveUserData
 	 * @throws IOException 
@@ -87,26 +105,21 @@ public class ATMServerClient {
 	}
 	
 	/**
-	 * getAccountBalance
-	 * @return
+	 * @return int This clients balance
 	 */
 	public int getAccountBalance() {
 		return balance;		
 	}
 	
 	/**
-	 * Withdrawal
+	 * This method performs a withdrawal on this clients account.
 	 * @param amount
-	 * @return
+	 * @return int This returns the following:
+	 * 0 = successful.
+	 * -1 = wrong code.
+	 * -2 Insufficient founds.
 	 */
 	public int withdrawal(int amount, String code) {
-		try {
-			getClientCodes();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return 1;
-		}
-		
 		if(code.equals(clientCodes.get(0))) {
 			if(amount <= balance) {
 				balance -= amount;
@@ -121,7 +134,7 @@ public class ATMServerClient {
 	}
 	
 	/**
-	 * deposit
+	 * This method performs a deposit into this clients account.
 	 * @param amount
 	 * @return
 	 */
@@ -130,6 +143,10 @@ public class ATMServerClient {
 		return true;
 	}
 	
+	/**
+	 * This method returns this clients user id.
+	 * @return
+	 */
 	public long getUserId() {
 		return userId;
 	}

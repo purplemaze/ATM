@@ -8,10 +8,15 @@ import java.util.List;
 import files.FileReaderWriter;
 
 /**
+ * ATMServerThread class!
  * 
- * @author Daniel C
- *
- */
+ * This class is responsible for all the communication with the client via Socket.
+ * It runs in it's own thread.
+ * 
+ * @author Daniel C 
+ * @author Ziad S
+ * @version 1.0
+*/
 public class ATMServerThread extends Thread {
 
     private Socket socket = null;
@@ -22,6 +27,12 @@ public class ATMServerThread extends Thread {
     private FileReaderWriter reader;
 
 
+    /**
+     * Constructor, takes a socket and a reference to the sever to keep track 
+     * of logged in users.
+     * @param socket
+     * @param server
+     */
     public ATMServerThread(Socket socket, ATMServer server) {
         super("ATMServerThread");
         this.socket = socket;
@@ -29,6 +40,11 @@ public class ATMServerThread extends Thread {
         System.out.println(""  + socket + " : " + "connected");
     }
     
+    /**
+     * Converts a byte array to a Long
+     * @param b
+     * @return
+     */
     private Long byteToLong(byte[] b) {
     	long value = 0;
     	for (int i = 0; i < b.length; i++) {
@@ -38,7 +54,7 @@ public class ATMServerThread extends Thread {
     }
     
     /**
-     * 
+     * Logs in the client using the server instance's method loginCLient.
      * @param clientID
      * @param cardCode
      * @return
@@ -48,8 +64,9 @@ public class ATMServerThread extends Thread {
     }
     
     /**
-     * @throws IOException 
-     * 
+     * This method logs out the client and saves all the user data.
+     * @throws IOException
+     * @see IOException
      */
     private void logOutUser() throws IOException {
     	client.saveUserData();
@@ -57,7 +74,8 @@ public class ATMServerThread extends Thread {
     }
     
     /**
-     * 
+     * This method is responsible for checking that the client side follows the ATM protocol
+     * for a "log in" and then logs in the user.
      * @throws IOException
      */
     private void loginUser() throws IOException {
@@ -101,6 +119,11 @@ public class ATMServerThread extends Thread {
     	
     }
     
+    /**
+     * This methods reads the current banner.
+     * It also checks if the banner is correctly formatted. 
+     * @throws IOException
+     */
     private void greeting() throws IOException {
     	reader = new FileReaderWriter("server/res/banner.txt");
     	List<String> banner = reader.readFile();
@@ -118,6 +141,14 @@ public class ATMServerThread extends Thread {
     	out.writeUTF(temp);
     }
     
+    /**
+     * This method is responsible for checking that the client side follows the ATM protocol
+     * for "balance".
+     * First it acknowledges the clients request(3, 0) and checks if the client is logged in.
+     * If so it confirms the balance and waits for a "get balance request".
+     * Then it writes the balance on the output stream.
+     * @throws IOException
+     */
     private void balance() throws IOException {
     	byte[] answear = {3,0};
     	byte[] response = new byte[2];
@@ -128,6 +159,10 @@ public class ATMServerThread extends Thread {
     	}
     }
     
+    /**
+     * 
+     * @throws IOException
+     */
     private void deposit() throws IOException {
     	byte[] answear = {5,0};
     	if(client != null) {
