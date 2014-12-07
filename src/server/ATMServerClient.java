@@ -81,7 +81,8 @@ public class ATMServerClient {
 	}
 	
 	/**
-	 * saveUserData
+	 * This method reads the whole user database and updates the clients balance
+	 * and the client codes(for withdrawal).
 	 * @throws IOException 
 	 */
 	public void saveUserData() throws IOException {

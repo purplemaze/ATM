@@ -25,13 +25,14 @@ public class ATMServerThread extends Thread {
     private ATMServer server;
     private ATMServerClient client;
     private FileReaderWriter reader;
+    private byte opcode;
+    private byte request;
 
 
     /**
-     * Constructor, takes a socket and a reference to the sever to keep track 
-     * of logged in users.
-     * @param socket
-     * @param server
+     * Constructor
+     * @param socket Takes a socket to read and write from.
+     * @param server Takes a server to keep track of logged in users.
      */
     public ATMServerThread(Socket socket, ATMServer server) {
         super("ATMServerThread");
@@ -144,6 +145,7 @@ public class ATMServerThread extends Thread {
     /**
      * This method is responsible for checking that the client side follows the ATM protocol
      * for "balance".
+     * <p>
      * First it acknowledges the clients request(3, 0) and checks if the client is logged in.
      * If so it confirms the balance and waits for a "get balance request".
      * Then it writes the balance on the output stream.
@@ -151,11 +153,19 @@ public class ATMServerThread extends Thread {
      */
     private void balance() throws IOException {
     	byte[] answear = {3,0};
-    	byte[] response = new byte[2];
     	if(client != null) {
     		out.write(answear);
-    		in.read(response);
-    		if(response[1] == 2) out.writeInt(client.getAccountBalance());
+    		opcode = in.readByte();
+    		request = in.readByte();
+    		if(opcode == 3 && request == 2) {
+    			out.writeInt(client.getAccountBalance());
+    		}else {
+    			answear[1] = -1;
+        		out.write(answear);
+    		}
+    	}else {
+    		answear[1] = -1;
+    		out.write(answear);
     	}
     }
     
@@ -173,6 +183,9 @@ public class ATMServerThread extends Thread {
     			answear[1] = -1;
     			out.write(answear);
     		}
+    	}else {
+    		answear[1] = -1;
+			out.write(answear);
     	}
     	System.out.println(""  + socket + " : " + "deposit complete " + "ret: " + answear[1]);
     }
@@ -185,7 +198,7 @@ public class ATMServerThread extends Thread {
     	byte[] answear = {4,0};
     	if(client != null) {
     		out.write(answear);
-    		int amount = in.readInt(); // lägg till felhantering!!
+    		int amount = in.readInt();
     		out.write(answear); 
     		String code = in.readUTF();
     		int ret = client.withdrawal(amount, code);
@@ -203,7 +216,22 @@ public class ATMServerThread extends Thread {
     		}
     	}
     }
-
+    
+    @SuppressWarnings("unused")
+    private boolean verifyAmount(int amount) {
+		return false;
+    	
+    }
+    
+    @SuppressWarnings("unused")
+	private void notLoggedIn() {
+    	//answear[1] = -1;
+		//out.write(answear);
+    }
+    
+    /**
+     * 
+     */
     public void run(){         
         try {
             out = new DataOutputStream(socket.getOutputStream());
@@ -212,21 +240,22 @@ public class ATMServerThread extends Thread {
             greeting();
             
             while(true) {
-            	byte opCode = in.readByte();
-            	if(opCode == -1) throw new IOException("broken pipe");
-            	@SuppressWarnings("unused")
-				byte action = in.readByte();
-            	switch (opCode) {
+            	opcode = in.readByte();
+            	if(opcode == -1) throw new IOException("broken pipe");
+            	request = in.readByte();
+            	switch (opcode) {
             	case 1:
-            		System.out.println(""  + socket + " : " + "is trying to log in");
-            		loginUser();
+            		if(request == 1) {
+            			System.out.println(""  + socket + " : " + "is trying to log in");
+            			loginUser();
+            		}
             		break;
             	case 3:
             		System.out.println(""  + socket + " : " + "is accessing his/hers balance");
             		balance();
             		break;
             	case 4:
-            		System.out.println(""  + socket + " : " + "is making a withdrawl");
+            		System.out.println(""  + socket + " : " + "is making a withdrawal");
             		withdrawal();
             		break;
             	case 5:

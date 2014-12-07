@@ -44,6 +44,7 @@ public class ATMServer {
 
     /**
      * This method creates a new ServerSocket with a static port.
+     * <p>
      * It creates one thread per each client connection.
      * @throws IOException when creating a new server
      * @see IOException
