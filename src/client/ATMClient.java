@@ -56,7 +56,7 @@ public class ATMClient {
 		}
 		
 		langHeader(); // Reads the possible languages
-		chosenLanguage(1);	// Loads default language (Eng)
+		loadDefaultLanguage();
 		System.out.println("Connecting to bank..");
 		
 		try{
@@ -169,7 +169,7 @@ public class ATMClient {
     	}else if(response == 0) {
     		System.out.println(lang.get("alreadyLoggedIn"));
     	}else if(response == 1) {
-    		System.out.println(lang.get("wrongCardCode"));
+    		System.out.println(lang.get("wrongCode"));
     	}else {
     		System.err.println("Hur ska vi felhantera detta?, eller ska vi skita i det :S");
     	}
@@ -346,24 +346,57 @@ public class ATMClient {
 		header = new ArrayList<String>();
 		header = file.readFile();	
 	}
+	
+	private void loadDefaultLanguage() throws IOException {
+		file = new FileReaderWriter("client/res/eng.lang");
+		List<String> tempLanguage = new ArrayList<String>();
+		tempLanguage = file.readFile();
+		replacePhrases(tempLanguage);	
+	}
 	/**
+	 * Calls the server to change language, and changes the language in the client.
+	 * <p>
 	 * Reads language files and replaces all phrases into chosen language.
 	 * @param chosenLang, array index for the chosen language
 	 * @throws IOException
 	 */
 	private void chosenLanguage(int chosenLang) throws IOException{
-		//loads language
-		
-		String lOptions = header.get(0);	
-		String[] languages = lOptions.split(" ");	//Splits possible languages
-		
-		if(chosenLang < 0 || chosenLang > languages.length){	//Checks if user inputs are correct
-			System.out.println(lang.get("invalidLanguage"));
+		byte[] languageReq = {2, 1};
+		byte[] answear = new byte[2];
+		out.write(languageReq);
+		in.read(answear);
+		if(answear[1] == 0) {
+			String lOptions = header.get(0);	
+			String[] languages = lOptions.split(" ");	//Splits possible languages
 			
+			if(chosenLang < 0 || chosenLang > languages.length - 1){	//Checks if user inputs are correct
+				System.out.println(lang.get("invalidLanguage"));
+				
+			}else {
+				out.writeUTF(languages[chosenLang]);
+				in.read(answear);
+				if(answear[1] == 0) {
+					file = new FileReaderWriter("client/res/" + languages[chosenLang] + ".lang");
+					List<String> tempLanguage = new ArrayList<String>();
+					tempLanguage = file.readFile();
+					replacePhrases(tempLanguage);
+					languageReq[1] = 2;
+					out.write(languageReq);
+					bankGreeting();
+				}else {
+					System.err.println("Language dosen't exist.. contact bank");
+				}
+			}
 		}else {
-		file = new FileReaderWriter("client/res/" + languages[chosenLang] + ".lang");
-		List<String> tempLanguage = new ArrayList<String>();
-		tempLanguage = file.readFile();
+			System.err.println("Something went wrong.. contact bank");
+		}
+		
+	}
+	/**
+	 * Help method to replace phrases to chosen language
+	 * @param tempLanguage
+	 */
+	private void replacePhrases(List<String> tempLanguage) {
 		lang = new HashMap<>();
 		lang.put("startMenu",tempLanguage.get(0));
 		lang.put("cardNumber", tempLanguage.get(1));
@@ -390,7 +423,6 @@ public class ATMClient {
 		lang.put("validDeposit", tempLanguage.get(22));
 		lang.put("toMuchWithdrawal", tempLanguage.get(23));
 		lang.put("negativeWithdrawal", tempLanguage.get(24));
-		}
 	}
 	/**
 	 * Transforms the cardNumber from long to byte

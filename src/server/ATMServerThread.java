@@ -27,6 +27,8 @@ public class ATMServerThread extends Thread {
     private FileReaderWriter reader;
     private byte opcode;
     private byte request;
+    private String language;
+    private String banner;
 
 
     /**
@@ -36,6 +38,12 @@ public class ATMServerThread extends Thread {
      */
     public ATMServerThread(Socket socket, ATMServer server) {
         super("ATMServerThread");
+        this.language = "eng";
+        try {
+			setBanner();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         this.socket = socket;
         this.server = server;
         System.out.println(""  + socket + " : " + "connected");
@@ -121,25 +129,32 @@ public class ATMServerThread extends Thread {
     }
     
     /**
-     * This methods reads the current banner.
+     * This methods reads the banner of the selected language.
      * It also checks if the banner is correctly formatted. 
      * @throws IOException
      */
-    private void greeting() throws IOException {
-    	reader = new FileReaderWriter("server/res/banner.txt");
-    	List<String> banner = reader.readFile();
-    	Iterator<String> it = banner.iterator();
+    private void setBanner() throws IOException {
+    	reader = new FileReaderWriter("server/res/" + language + "banner.txt");
+    	List<String> bannerList = reader.readFile();
+    	Iterator<String> it = bannerList.iterator();
     	StringBuilder stringB = new StringBuilder();
     	while(it.hasNext()) {
     		stringB.append(it.next());
     		if(it.hasNext())
     		stringB.append("\n");
     	}
-    	String temp = stringB.toString();
-    	if(temp.length() > 80 || temp.length() < 0) {
-    		out.writeUTF("Welcome to the YOLO Bank of New TrollingTown.. \nPlz deposit moneyz..");
+    	this.banner = stringB.toString();
+    	if(banner.length() > 80 || banner.length() < 0) {
+    		System.err.println("Invalid language file!");
     	}
-    	out.writeUTF(temp);
+    }
+    
+    /**
+     * This method writes the current banner on the Output stream.
+     * @throws IOException
+     */
+    private void greeting() throws IOException {
+    	out.writeUTF(this.banner);
     }
     
     /**
@@ -217,6 +232,25 @@ public class ATMServerThread extends Thread {
     	}
     }
     
+    private void language() throws IOException {
+    	byte[] answear = {2,0};
+    	out.write(answear);
+    	String oldLanguage = this.language;
+    	try {
+    		language = in.readUTF();
+    		setBanner();
+    		out.write(answear);
+    		opcode = in.readByte();
+    		request = in.readByte();
+    		greeting();
+    	} catch (IOException e) {
+    		answear[1] = -1;
+    		out.write(answear);
+    		language = oldLanguage;
+    	}
+    		
+    }
+
     @SuppressWarnings("unused")
     private boolean verifyAmount(int amount) {
 		return false;
@@ -249,6 +283,10 @@ public class ATMServerThread extends Thread {
             			System.out.println(""  + socket + " : " + "is trying to log in");
             			loginUser();
             		}
+            		break;
+            	case 2:
+            		System.out.println(""  + socket + " : " + "is trying to change language");
+            		language();
             		break;
             	case 3:
             		System.out.println(""  + socket + " : " + "is accessing his/hers balance");
