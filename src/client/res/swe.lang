@@ -1,0 +1,25 @@
+(1)Logga in (2)Språk
+Ange kortnummer: 
+Ange pinkod: 
+(1)Svenska (2)Engelska (3)Orten
+(1)Saldo (2)Uttag (3)Insättning (4)Språk (5)Logga ut
+Ditt saldo är: 
+Ange uttagsumma: 
+Ange kod:
+Ange insättningssumma: 
+Fel kod!
+Ej tillräckligt mycket pengar!
+Hejdå!
+Ogiltligt kortnummer, måste vara exakt 16 siffror!
+Ogiltlig kortkod, måste vara exakt 3 siffror!
+Finns ingen sådan användare!
+Du är redan inloggad!
+Oglitlig insättningen måste vara mindre än 1 000 000:-. Kontakta bank!
+Ogiltlig insättning måste vara större än 0:-. Kontakta bank!
+Ogiltlig längd på kod. Måste vara exakt 2 siffror!
+Uttag lyckad!
+Slut på koder. Kontakta banken för nya koder!
+Välj ett giltligt språk!
+Insättning lyckad!
+Oglitlig uttag måste vara mindre än 1 000 000:-. Kontakta bank!
+Ogiltlig uttag måste vara större än 0:-. Kontakta bank!

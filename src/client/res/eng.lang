@@ -1,0 +1,25 @@
+(1)Login  (2)Language
+Type in your card number: 
+Type in your card code: 
+(1)Swedish (2)English (3)Blatizi
+(1)Balance (2)Withdrawal (3)Deposit (4)Language (5)Logout
+Your balance is: 
+Type in the amount of money you want to withdraw:  
+Type in code: 
+Type in the amount of money you want to deposit: 
+Wrong code!
+You don't have enough money!
+GoodBye!
+Invalid card number, it must be exactly 16 digits!
+Invalid card code, it must be exactly 3 digits!
+No such user!
+You are already logged in!
+You can't insert more than 1 000 000:-. Please contact bank!
+You can't insert less than 0:-!
+Invalid code length, the code needs to be exactly 2 digits
+Withdrawal successfull
+You have no more codes available. Contact bank for new codes!
+Please choose a valid language
+Deposit successfull
+You can't withdraw more than 1 000 000:-. Please contact bank!
+You can't withdraw less than 0:-!

@@ -62,7 +62,6 @@ public class ATMServer {
     }
     
     /**
-     * This method loads the client database.
      * Then it stores all the clients in memory as not logged in.
      * @throws IOException when reading a file
      * @see IOException
