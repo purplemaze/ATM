@@ -11,7 +11,17 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 import files.FileReaderWriter;
-
+/**
+ * ATMClient class!
+ * 
+ * This is the main class for the ATM client application.
+ * It creates a connection with server and communicates while getting input from user.
+ * 
+ * 
+ * @author Daniel C 
+ * @author Ziad S
+ * @version 1.0
+*/
 
 public class ATMClient {
 	private static int connectionPort;
@@ -93,18 +103,26 @@ public class ATMClient {
 	 * @throws IOException
 	 */
 	private void scanLogin() throws IOException {
-		while (!login){
-			System.out.println(lang.get("startMenu"));
-			int chosen = scanner.nextInt();
-			if(chosen == 2){
+			
+		while (!login) {
+			int chosen = 0;
+			try{
+				System.out.println(lang.get("startMenu"));
+				chosen = scanner.nextInt();
+			}catch (InputMismatchException e) {
+				System.out.println("Inalid user input.");
+				scanner.next();
+			}if(chosen == 2) {
 				System.out.println(lang.get("languageMenu"));				
 				chosenLanguage(scanner.nextInt() - 1);
-			}if(chosen == 1){
+			}if(chosen == 1) {
 				loginClient();
 			}
+
 		}
-		scanMenu(); 
+			scanMenu(); 
 	}
+	
 	
 	/**
 	 * Handles login communication between server and client when user is trying to login.
@@ -124,7 +142,7 @@ public class ATMClient {
 		
 		if(opCode == 1 && response == 2) {
 			long cardNumber = 0;
-			while( !(validateCardNumber(cardNumber))) {
+			while(!(validateCardNumber(cardNumber))) {
 				try {
 					System.out.println(lang.get("cardNumber"));
 					cardNumber = scanner.nextLong();
@@ -156,7 +174,7 @@ public class ATMClient {
 			out.writeInt(cardCode);;  // send card code to server
 			
 		}else {
-			// kanske?
+			System.err.println("Contact support");
 		}
 		//Reads answer from server and handles if it's a valid login.
 		in.read(loginAns);
@@ -165,7 +183,7 @@ public class ATMClient {
     	if(response == 2) { 
     		login = true;
     	}else if(response == -1) {
-    		System.out.println(lang.get("noSuchUser"));
+    		System.out.println(lang.get("noUser"));
     	}else if(response == 0) {
     		System.out.println(lang.get("alreadyLoggedIn"));
     	}else if(response == 1) {
@@ -214,10 +232,10 @@ public class ATMClient {
 					scanner.next();
 				}	
 				if(!(validateAmount(amount))) 
-					if(amount > 1000000){
-						System.out.println(lang.get("toMuchWithdrawal"));
-					}else{
-						System.out.println(lang.get("negativeWithdrawal"));
+					if(amount >= 1000000){
+						System.out.println(lang.get("toMuchInsert"));
+					}if(amount <= 0){
+						System.out.println(lang.get("negativeInsert"));
 					}
 			}
 			out.writeInt(amount);
@@ -245,15 +263,16 @@ public class ATMClient {
 				try {
 					System.out.println(lang.get("withdrawAmount"));	
 					amount = scanner.nextInt();
+					System.out.println(amount);
 				}catch (InputMismatchException e){
 					scanner.next();
 				}	
 				if(!(validateAmount(amount))) 
-					if(amount > 1000000){
+					if(amount >= 1000000){
 						System.out.println(lang.get("toMuchWithdrawal"));
-					}else{
+					}if(amount <= 0){
 						System.out.println(lang.get("negativeWithdrawal"));
-					}
+				}
 			}
 			//Checks whether the amount request is valid and handles code input
 			out.writeInt(amount);
@@ -313,8 +332,16 @@ public class ATMClient {
 		Boolean listening = true;
 
 		while (listening){
-			System.out.println(lang.get("mainMenu"));
-			int chosen = scanner.nextInt();
+			int chosen = 0;
+			try{
+				System.out.println(lang.get("mainMenu"));
+				chosen = scanner.nextInt();
+			}catch (InputMismatchException e){
+				
+			System.out.println("Inalid user input.");
+			scanner.next();
+			}
+			
 			if(chosen == 1){
 				balance();
 			}else if(chosen == 2){
@@ -370,6 +397,7 @@ public class ATMClient {
 			String[] languages = lOptions.split(" ");	//Splits possible languages
 			
 			if(chosenLang < 0 || chosenLang > languages.length - 1){	//Checks if user inputs are correct
+				System.out.println(languages);
 				System.out.println(lang.get("invalidLanguage"));
 				
 			}else {
@@ -384,6 +412,7 @@ public class ATMClient {
 					out.write(languageReq);
 					bankGreeting();
 				}else {
+					System.out.println(languages[0] + languages[1] + languages[2]);
 					System.err.println("Language dosen't exist.. contact bank");
 				}
 			}
@@ -423,6 +452,7 @@ public class ATMClient {
 		lang.put("validDeposit", tempLanguage.get(22));
 		lang.put("toMuchWithdrawal", tempLanguage.get(23));
 		lang.put("negativeWithdrawal", tempLanguage.get(24));
+	
 	}
 	/**
 	 * Transforms the cardNumber from long to byte
@@ -483,8 +513,11 @@ public class ATMClient {
 		}
 		return 0;
 	}
-	public static void main(String[] args) throws IOException {
-		new ATMClient();	// Starts client
-	
+	public static void main(String[] args) throws IOException {	
+		try{
+			new ATMClient(); // Starts client
+		}catch(SocketException e) {
+			System.err.println("Lost connection with server");
+		}
 	}
 }
